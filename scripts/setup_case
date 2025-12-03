@@ -105,8 +105,8 @@ function check_args() {
     echo "NEKRS_HOME does not exist! Check path."
     exit 1
   fi
-  if [ ${MODEL} != "dist-gnn" ] && [ ${MODEL} != "sr-gnn" ]; then
-    echo "Invalid model type! Supported options are dist-gnn and sr-gnn."
+  if [ ${MODEL} != "dist-gnn" ] && [ ${MODEL} != "sr-gnn" ] [ ${MODEL} != "sr-gtr" ]; then
+    echo "Invalid model type! Supported options are dist-gnn, dist-gtr and sr-gnn."
     exit 1
   fi
   if [ ${DEPLOYMENT} != "clustered" ] && [ ${DEPLOYMENT} != "colocated" ] && [ ${DEPLOYMENT} != "offline" ]; then
@@ -282,7 +282,7 @@ function setup_venv() {
       pip install torch_geometric==2.5.3
     fi  
 
-    if [ ${MODEL} == "sr-gnn" ]; then
+    if [ ${MODEL} == "sr-gnn" || ${MODEL} == "dist-gtr" ]; then
       if [ ${SYSTEM} == "aurora" ]; then
         cd ../
         git clone https://github.com/rusty1s/pytorch_cluster.git

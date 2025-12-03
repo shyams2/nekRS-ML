@@ -44,8 +44,6 @@ import torch_geometric.utils as pyg_utils
 # Local imports
 import utils
 from scheduler import ScheduledOptim
-import gnn
-import graph_transformer as gtr
 import graph_connectivity as gcon
 from client import OnlineClient
 import create_halo_info_par
@@ -385,6 +383,7 @@ class Trainer:
             if self.cfg.use_residual:
                 name += "_RESID"
 
+            import gnn
             model = gnn.DistributedGNN(
                 input_node_channels,
                 input_edge_channels,
@@ -405,6 +404,7 @@ class Trainer:
             if self.cfg.use_residual:
                 name += "_RESID"
 
+            import graph_transformer as gtr
             model = gtr.GraphTransformer(
                 input_node_channels,
                 hidden_channels,
