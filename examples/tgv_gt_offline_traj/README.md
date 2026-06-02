@@ -1,19 +1,6 @@
-# Offline training of a time dependent GNN surrogate model
+# Offline training of the Dist-GT model
 
-This example demonstrates how the `gnn` and the `trajGen` plugins can be used to create a distributed graph from the nekRS mesh and train a GNN surrogate from a saved solution trajectory.
-It is based off of the [Taylor-Green-Vortex flow](../tgv/README.md), however on a slightly larger mesh.
-In this example, the model takes as inputs the three components of velocity at a particular time step and learns to predict the velocity components at every graph (mesh) node at a later time step.
-It is a time dependent modeling task, since the training data consists of a pair of solution fields and the model learns to predict future solutions.
-
-Specifically, in `UDF_Setup()`, the `graph` class is instantiated from the mesh, followed by calls to `graph->gnnSetup();` and `graph->gnnWrite();` to setup and write the GNN input files to disk, respectively.
-The GNN input files are written in a directory called `./gnn_outputs_poly_7`, where the `7` marks the fact that 7th order polynomials are used in this case.
-The `trajGen` class is also instantiated, followed by a call to `tgen->trajGenSetup()`.
-When initializing the trajectory class, note the definition of `dt_factor`.
-This is the delta factor used to create the trajectory for training.
-If `dt_factor=1`, the GNN learns to predict 1 time step into the future, i.e., the next nekRS time step.
-If `dt_factor=10`, the GNN learns to predict the 10 time steps into the future.
-In `UDF_ExecuteStep()`, `tgen->trajGenWrite()` is called to write the trajectory files to disk.
-The files are written to `./traj_poly_7`, under a sub-directory tagged with the initial time and the delta factor used for the trajectory, as well as separated into directories for each MPI rank of the nekRS simulation.
+This example is identical to the [tgv_gnn_offline_traj](../tgv_gnn_offline_traj/) one, with the exception that it demonstrates how to train the Dist-GT model instead of the Dist-GNN model. Since the Dist-GT and Dist-GNN models have many similarities and differ mainly in the internal layers of the arcitecture, the same `main.py` and `trainer.py` scripts can be used for both. The GT architecture, present in [graph_transformer.py](../../3rd_party/gnn/dist-gnn/graph_transformer.py), is used by the Dist-GNN trainer when the `model_name=graph_transformer` argument is passed. This is the only change required to use the Dist-GT model. There are two unique hyperparameters to the GT model, `n_transformer_layers` and `num_heads`, which control the number of transformer layers (similar to the number of message passing layers) and the number of attention heads, respectively.
 
 
 ## Building nekRS
@@ -23,7 +10,7 @@ Requirements:
 * GNU/oneAPI/NVHPC/ROCm compilers (C++17/C99 compatible)
 * MPI-3.1 or later
 * CMake version 3.21 or later
-* PyTorch and PyTorch Geometric (for the examples using the GNN)
+* PyTorch and PyTorch Geometric 
 
 To build nekRS and the required dependencies, first clone our GitHub repository:
 
@@ -45,7 +32,7 @@ For example, to build nekRS-ML on Aurora, execute from a compute node
 ## Running the example
 
 Scripts are provided to conveniently generate run scripts and config files for the workflow on the different ALCF systems.
-Note that a virtual environment with PyTorch Geometric is needed to train the GNN.
+Note that a virtual environment with PyTorch Geometric is needed to train the GT on Aurora.
 
 **From a compute node** execute:
 ```sh
@@ -64,7 +51,7 @@ on how to use `gen_run_script`, use `--help`
 
 The script will produce a `run.sh` script specifically tailored to the desired system and using the desired nekRS install directory.
 
-Finally, simply execute the run script **from the compute nodes** with
+Finally, simply execute the run script **from the compute node** with
 
 ```bash
 ./run.sh
@@ -72,10 +59,10 @@ Finally, simply execute the run script **from the compute nodes** with
 
 The `run.sh` script is composed of five steps:
 
-- The nekRS simulation to generate the GNN input files and the trajectory. This step produces the graph and training data in `./gnn_outputs_poly_7` and `./traj_poly_7`, respectively.
-- An auxiliary Python script to create additional data structures needed to enforce consistency in the GNN. This step produces some additional files in `./gnn_outputs_poly_7` needed during GNN training.
+- The nekRS simulation to generate the GT input files and the trajectory. This step produces the graph and training data in `./gnn_outputs_poly_7` and `./traj_poly_7`, respectively.
+- An auxiliary Python script to create additional data structures needed to enforce consistency in the GT. This step produces some additional files in `./gnn_outputs_poly_7` needed during GT training.
 - A Python script to check the accuracy of the graph data generated. This script compares the results in `./ref` with those created in `./gnn_outputs_poly_7`.
 - A second check with the same Python script to ensure the accuracy of the trajectory data generated. This script compares the results in `./ref` with those created in `./traj_poly_7`.
-- GNN training. This step trains the GNN for 100 iterations based on the data provided in `./gnn_outputs_poly_7` and `./traj_poly_7`.
+- GT training. This step trains the GT for 100 iterations based on the data provided in `./gnn_outputs_poly_7` and `./traj_poly_7`.
 - The case is run with 4 MPI ranks for simplicity, however the users can set the desired number of ranks. Note to comment out the accuracy checks as they will fail in this case.
 
