@@ -2,7 +2,8 @@
 
 : ${SYSTEM:="aurora:compute"}
 : ${PREFIX:="${PWD}/test_data"}
-: ${COMMIT="main"}
+#: ${COMMIT="main"}
+: ${COMMIT="$(git -C "$(dirname "$0")/.." rev-parse --abbrev-ref HEAD 2>/dev/null || echo main)"}
 : ${QUEUE:="prod"}
 : ${PROJECT:="datascience"}
 : ${FS:="home"}
@@ -10,6 +11,7 @@
 : ${TAG:="all"}
 : ${LIST_TAGS:=0}
 : ${POLICY:=async}
+: ${CONFIG_FILE:="sites.py"}
 
 # Parse command line args
 # =======================
@@ -30,18 +32,23 @@ print_help() {
   echo "  --queue,       -q   <QUEUE>          Set the job queue (Default: $QUEUE)"
   echo "  --system,      -s   <SYSTEM>         Set the system name (Default: $SYSTEM)"
   echo "  --tag,         -t   <TAG>            Run the tests with tag TAG (Default: $TAG)"
+  echo "  --config-file, -cfg <CONFIG_FILE>    Set the configuration file (Default: $CONFIG_FILE)"
   echo ""
   echo "Examples:"
   echo "  To run all the tests:"
   echo "    ./$(basename "$0") -t all -b"
-  echo "  To run all the offline tests:"
+  echo "  To run all the offline training tests:"
   echo "    ./$(basename "$0") -t offline -b"
-  echo "  To run all the online tests:"
+  echo "  To run all the online training tests:"
   echo "    ./$(basename "$0") -t online -b"
-  echo "  To run all the tests based on tgv:"
+  echo "  To run all the tests based on TGV case:"
   echo "    ./$(basename "$0") -t tgv -b"
   echo "  To run just the tgv_offline test:"
   echo "    ./$(basename "$0") -t tgv_offline$ -b"
+  echo "  To run all ensemble tests:"
+  echo "    ./$(basename "$0") -t ensemble -b"
+  echo "  To run only the periodicHill ensemble test:"
+  echo "    ./$(basename "$0") -t periodichill_ensemble$ -b"
   echo "  Please note that \"-b\" parameter is required only for the first run of each tag."
   echo "  You can pass --list-tags or -l to list all the test tags:"
   echo "    ./$(basename "$0") -l"
@@ -101,6 +108,10 @@ while [ $# -gt 0 ]; do
       TAG="$2"
       shift; shift
       ;;
+    --config-file| -cfg)
+      CONFIG_FILE="$2"
+      shift; shift
+      ;;
     *)
       print_help
       exit 1
@@ -120,7 +131,7 @@ done
 # --checkpath: https://reframe-hpc.readthedocs.io/en/stable/manpage.html#cmdoption-c
 # --tag: https://reframe-hpc.readthedocs.io/en/stable/manpage.html#cmdoption-t
 # --run: https://reframe-hpc.readthedocs.io/en/stable/manpage.html#cmdoption-r
-CMD="uv --no-managed-python run reframe --save-log-files --config-file sites.py"
+CMD="uv --no-managed-python run reframe --save-log-files --config-file ${CONFIG_FILE}"
 CMD="${CMD} --keep-stage-files --timestamp --checkpath tests.py"
 CMD="${CMD} --exec-policy=${POLICY} --system ${SYSTEM} --prefix=${PREFIX}"
 CMD="${CMD} -S queue=${QUEUE} -S project=${PROJECT} -S filesystems=${FS}"
@@ -134,4 +145,5 @@ else
   fi
   CMD="${CMD} --report-file ${PREFIX}/reports/report_{sessionid}.json --tag ${TAG} --run"
 fi
+module load frameworks
 ${CMD}

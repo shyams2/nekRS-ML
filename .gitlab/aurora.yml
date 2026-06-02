@@ -12,6 +12,12 @@ stages:
 setup:
   stage: submit
   extends: .aurora-shell-runner
+  # Trigger/API pipelines (e.g. GitHub Actions → trigger token) run immediately.
+  # MR and web pipelines stay manual so Aurora is not used on every push.
+  rules:
+    - if: $CI_PIPELINE_SOURCE == "trigger"
+    - when: manual
+  allow_failure: false
   script:
     - |
       cd ${WRK_DIR}
@@ -21,4 +27,5 @@ setup:
     - git clone https://github.com/argonne-lcf/nekRS-ML.git
     - cd ./nekRS-ML/tests
     - git checkout ${CI_COMMIT_SHA}
+    - module load frameworks
     - ./run.sh -b -cm ${CI_COMMIT_SHA} -q capacity -t all -e serial

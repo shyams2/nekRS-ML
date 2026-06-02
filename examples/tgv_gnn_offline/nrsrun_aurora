@@ -35,6 +35,7 @@ echo "module load ${FRAMEWORKS_MODULE}" >> $RFILE
 echo "source ${VENV_PATH}" >> $RFILE
 echo "module list" >> $RFILE
 
+echo "export ZE_FLAT_DEVICE_HIERARCHY=FLAT" >> $RFILE
 echo -e "\nexport NEKRS_HOME=$NEKRS_HOME" >>$RFILE
 #echo "export NEKRS_GPU_MPI=$NEKRS_GPU_MPI" >>$RFILE
 #echo "export MPICH_GPU_SUPPORT_ENABLED=$NEKRS_GPU_MPI" >> $RFILE
@@ -79,6 +80,6 @@ echo "python ${NEKRS_HOME}/3rd_party/gnn/dist-gnn/check_input_files.py --REF ./r
 
 echo -e "\n# Train the GNN" >>$RFILE
 echo "head_node=\`head -1 \$PBS_NODEFILE | cut -d'.' -f1\`" >>$RFILE
-echo "mpiexec -n ${TOTAL_RANKS} -ppn ${RANKS_PER_NODE} --cpu-bind=list:${CPU_BIND_LIST} python ${NEKRS_HOME}/3rd_party/gnn/dist-gnn/main.py master_addr=\$head_node halo_swap_mode=all_to_all_opt layer_norm=True gnn_outputs_path=${PWD}/gnn_outputs_poly_3 target_loss=1.6206e-04" >> $RFILE
+echo "mpiexec -n ${TOTAL_RANKS} -ppn ${RANKS_PER_NODE} --cpu-bind=list:${CPU_BIND_LIST} python ${NEKRS_HOME}/3rd_party/gnn/dist-gnn/main.py master_addr=\$head_node halo_swap_mode=all_to_all_opt layer_norm=True gnn_outputs_path=${PWD}/gnn_outputs_poly_3 target_loss=2.7161e-04 transform_x=true transform_y=true transform_z=true" >> $RFILE
 chmod u+x $RFILE
 
