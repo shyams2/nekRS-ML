@@ -1878,6 +1878,7 @@ class Trainer:
 
     def train_step(self, data) -> Tensor:
         graph = self.data["graph"]
+        loss = torch.tensor([0.])
         tic = time.time()
         if WITH_CUDA or WITH_XPU:
             data = data.to(self.device)
